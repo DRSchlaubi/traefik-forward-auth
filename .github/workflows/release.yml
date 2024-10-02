@@ -26,7 +26,8 @@ jobs:
           CGO_ENABLED: 0
           GOOS: linux 
           GOARCH: ${{ matrix.arch }}
-        run: go build cmd/service/main.go
+          GO111MODULE: on
+        run: go build -a -installsuffix nocgo -o main/traefik-forward-auth cmd/main.go
       - uses: actions/upload-artifact@v4
         with:
           # Name of the artifact to upload.
@@ -70,10 +71,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          flavour: latest=auto
+          flavor: latest=auto
           tags: |
-            # set latest tag for master branch
+            # set latest tag for releases
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            # branch
+            type=ref,event=branch
+            # SHA
+            type=sha
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v6
